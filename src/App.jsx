@@ -199,7 +199,7 @@ const Clients = ({ clients, userId }) => {
 // --- GEMINI API INTEGRATION ---
 async function callGemini(prompt) {
   const apiKey = "AIzaSyCpignY3bs1ggK1EC7pMvRrPoHUAIyXQ0Q";
-  // CORREÇÃO FINAL: Usando o modelo de IA 'gemini-pro', o mais estável e universal.
+  // CORREÇÃO FINAL: Usando o modelo 'gemini-pro', o mais estável e universal.
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
   const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
   try {
@@ -207,13 +207,13 @@ async function callGemini(prompt) {
     if (!response.ok) { 
         const errorData = await response.json();
         console.error("API Error Response:", errorData);
-        throw new Error(errorData.error.message || `API call failed with status: ${response.status}`);
+        throw new Error(errorData.error.message || `A chamada à API falhou com o status: ${response.status}`);
     }
     const result = await response.json();
     if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
         return result.candidates[0].content.parts[0].text;
     } else {
-        return "A IA não retornou uma resposta válida. Tente um tópico diferente ou verifique as configurações.";
+        return "A IA não retornou uma resposta válida. Tente um tópico diferente ou verifique as configurações de segurança do seu projeto.";
     }
   } catch (error) { 
     console.error("Gemini API call error:", error);
