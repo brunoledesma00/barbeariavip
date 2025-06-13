@@ -6,7 +6,6 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 import { getFirestore, collection, addDoc, onSnapshot, query, doc, deleteDoc, updateDoc, where } from 'firebase/firestore';
 
 // --- CONFIGURAÇÃO DO FIREBASE ---
-// Em uma aplicação real, estas chaves estariam em variáveis de ambiente.
 const firebaseConfig = {
   apiKey: "AIzaSyCpignY3bs1ggK1EC7pMvRrPoHUAIyXQ0Q",
   authDomain: "barbearia-vip-360.firebaseapp.com",
@@ -117,6 +116,13 @@ const Login = () => {
 
 
 // --- PÁGINAS DO SISTEMA ---
+// Dados simulados para as seções que não usam Firestore ainda
+const initialFinancialData = [
+  { name: 'Jan', Faturamento: 4000, Custos: 2400, Lucro: 1600 }, { name: 'Fev', Faturamento: 3000, Custos: 1398, Lucro: 1602 }, { name: 'Mar', Faturamento: 5800, Custos: 2800, Lucro: 3000 }, { name: 'Abr', Faturamento: 4780, Custos: 2908, Lucro: 1872 }, { name: 'Mai', Faturamento: 6190, Custos: 3800, Lucro: 2390 }, { name: 'Jun', Faturamento: 5390, Custos: 3300, Lucro: 2090 },
+];
+const initialAppointments = {
+    'Segunda': [{id: 1, time: '09:00', client: 'Carlos Silva', service: 'Corte + Barba'}], 'Terça': [{id: 3, time: '11:00', client: 'Fernando Lima', service: 'Barba Terapia'}], 'Quarta': [], 'Quinta': [{id: 4, time: '14:00', client: 'Ricardo Alves', service: 'Corte'}], 'Sexta': [{id: 6, time: '09:00', client: 'Marcos Oliveira', service: 'Platinado'}], 'Sábado': [{id: 8, time: '10:00', client: 'André Bastos', service: 'Corte'}],
+};
 
 const Dashboard = ({clients, appointments}) => (
     <div className="space-y-8">
@@ -126,7 +132,6 @@ const Dashboard = ({clients, appointments}) => (
             <StatCard title="Agendamentos Hoje" value={appointments['Quarta']?.length || 0} icon={<Calendar className="text-white"/>} color="bg-yellow-500" />
             <StatCard title="Ticket Médio" value="R$ 65" icon={<Target className="text-white"/>} color="bg-indigo-500" />
         </div>
-        {/* ... restante do dashboard ... */}
     </div>
 );
 
@@ -138,7 +143,8 @@ const Clients = ({ clients, userId }) => {
         if (!newClient.name || !newClient.phone) return alert("Preencha nome e telefone.");
         try {
             await addDoc(collection(db, "users", userId, "clients"), {
-                ...newClient,
+                name: newClient.name,
+                phone: newClient.phone,
                 lastVisit: new Date().toISOString().split('T')[0],
                 totalSpent: 0,
             });
@@ -169,17 +175,16 @@ const Clients = ({ clients, userId }) => {
                     <PlusCircle size={18} className="mr-2"/> Novo Cliente
                 </button>
             </div>
-            {/* ... Tabela de clientes ... */}
             <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                    <thead className="border-b border-gray-600"><tr><th>Nome</th><th>Telefone</th><th>Última Visita</th><th>Total Gasto</th></tr></thead>
+                    <thead className="border-b border-gray-600"><tr><th>Nome</th><th>Telefone</th><th>Última Visita</th><th>Total Gasto (R$)</th></tr></thead>
                     <tbody>
                         {clients.map(client => (
                             <tr key={client.id} className="border-b border-gray-700 hover:bg-gray-700">
                                 <td className="p-3 font-semibold text-white">{client.name}</td>
                                 <td className="p-3">{client.phone}</td>
                                 <td className="p-3">{client.lastVisit}</td>
-                                <td className="p-3 text-green-400">R$ {client.totalSpent.toFixed(2)}</td>
+                                <td className="p-3 text-green-400">{client.totalSpent.toFixed(2)}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -189,12 +194,12 @@ const Clients = ({ clients, userId }) => {
     </>
     );
 };
-// ... outros componentes (Schedule, Inventory, etc.) com lógica de Firestore similar ...
+// ... outros componentes (Schedule, Inventory, etc.) serão desenvolvidos ...
 
 // --- GEMINI API INTEGRATION ---
 async function callGemini(prompt) {
   const apiKey = "AIzaSyCpignY3bs1ggK1EC7pMvRrPoHUAIyXQ0Q";
-  // CORREÇÃO FINAL: Usando o modelo de IA 'gemini-pro', o mais estável para este tipo de tarefa.
+  // CORREÇÃO FINAL: Usando o modelo de IA 'gemini-pro', o mais estável e universal.
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
   const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
   try {
@@ -202,17 +207,17 @@ async function callGemini(prompt) {
     if (!response.ok) { 
         const errorData = await response.json();
         console.error("API Error Response:", errorData);
-        throw new Error(errorData.error?.message || `API call failed with status: ${response.status}`);
+        throw new Error(errorData.error.message || `API call failed with status: ${response.status}`);
     }
     const result = await response.json();
-    if (result.candidates && result.candidates.length > 0) {
+    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts[0].text) {
         return result.candidates[0].content.parts[0].text;
     } else {
-        return "A IA não retornou uma resposta. Tente um tópico diferente.";
+        return "A IA não retornou uma resposta válida. Tente um tópico diferente ou verifique as configurações.";
     }
   } catch (error) { 
     console.error("Gemini API call error:", error);
-    return `Erro ao conectar com a IA: ${error.message}. Verifique a chave de API e o nome do modelo.` 
+    return `Erro ao conectar com a IA: ${error.message}. Verifique sua chave de API e se o modelo 'gemini-pro' está habilitado para ela.` 
   }
 }
 
@@ -254,8 +259,8 @@ const MarketingIA = () => {
 function MainApp({ user }) {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [clients, setClients] = useState([]);
-  const [appointments, setAppointments] = useState(initialAppointments); // Simulado por enquanto
-  const [inventory, setInventory] = useState([]); // Simulado por enquanto
+  const [appointments, setAppointments] = useState(initialAppointments);
+  const [inventory, setInventory] = useState([]);
 
   useEffect(() => {
       if (!user) return;
@@ -265,14 +270,8 @@ function MainApp({ user }) {
           const clientsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           setClients(clientsData);
       });
-
-      // Adicionar aqui listeners para 'appointments' e 'inventory' da mesma forma
       
-      return () => {
-          unsubscribeClients();
-          // unsubscribeAppointments();
-          // unsubscribeInventory();
-      };
+      return () => unsubscribeClients();
   }, [user]);
   
   const handleSignOut = () => {
@@ -284,7 +283,7 @@ function MainApp({ user }) {
       case 'dashboard': return <Dashboard clients={clients} appointments={appointments} />;
       case 'clients': return <Clients clients={clients} userId={user.uid} />;
       case 'marketing': return <MarketingIA />;
-      // ... outras abas aqui ...
+      // ... outras abas serão implementadas aqui ...
       default: return <Dashboard clients={clients} appointments={appointments}/>;
     }
   };
@@ -331,7 +330,7 @@ export default function App() {
             setUser(user);
             setLoading(false);
         });
-        return () => unsubscribe(); // Cleanup subscription
+        return () => unsubscribe();
     }, []);
 
     if (loading) {
