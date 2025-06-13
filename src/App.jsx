@@ -194,8 +194,8 @@ const Clients = ({ clients, userId }) => {
 // --- GEMINI API INTEGRATION ---
 async function callGemini(prompt) {
   const apiKey = "AIzaSyCpignY3bs1ggK1EC7pMvRrPoHUAIyXQ0Q";
-  // CORREÇÃO: Usando um modelo de IA estável e comprovado (gemini-1.5-flash-latest).
-  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+  // CORREÇÃO: Usando o modelo de IA gemini-pro, que é estável e amplamente disponível.
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`;
   const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
   try {
     const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
